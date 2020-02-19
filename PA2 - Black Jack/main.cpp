@@ -54,6 +54,7 @@ int cardValue(int id);
 void printHand(int hand[], int numCards);
 int getBestScore(int hand[], int numCards);
 
+
 const int NUM_CARDS = 52;
 
 /**
@@ -117,7 +118,7 @@ void printCard(int id)
                 if (id >= 39 && id <= 51)
                     pattern = 3;
     
-    cout << type[num] << "-" << suit[pattern] << " ";
+    cout << type[num] << "-" << suit[pattern];
 }
 
 /**
@@ -167,11 +168,26 @@ void printHand(int hand[], int numCards)
 int getBestScore(int hand[], int numCards)
 {
     /******** You complete ****************/
+    int score = 0;
     
+    for(int i=0; i<numCards; i++){
+        score += cardValue(hand[i]);
+    }
     
+    //if the score is over 21,
+    //see if there's an ACE card
+    int j = 0;
+    while(score>21 && j<numCards){
+        if (cardValue(hand[j]) == 11){
+            score -= 10;
+        }
+        j++;
+    }
     
+    return (score);
     
 }
+
 
 /**
  * Main program logic for the game of 21
@@ -197,7 +213,11 @@ int main(int argc, char* argv[])
     
     /******** You complete ****************/
     char repeat = 'y';
-    char user;
+    char user;       //record player response to "hit" or "stand"
+    int nextCard;    //stores the position of the next card in deck
+    int num_card_p, num_card_d;    //keeps track of the number of hand cards
+    int pScore, dScore;
+    
     
     while(repeat == 'y'){
         shuffle(cards);        //shuffle deck
@@ -220,23 +240,89 @@ int main(int argc, char* argv[])
             phand[c] = cards[i];
             dhand[c] = cards[i+1];
         }
+        nextCard = 4;    //next card in deck is in position 4
+        num_card_p = 2;    //player has 2 cards initially
+        num_card_d = 2;    //dealer has 2 cards initially
         
         //display initial hand
         cout << "Dealer: ";
         printHand(dhand, 1);
         cout << "Player: ";
-        printHand(phand, 2);
+        printHand(phand, num_card_p);
+        
+        //calculate initial scores
+        pScore = getBestScore(phand, num_card_p);
+        dScore = getBestScore(dhand, num_card_d);
         
         
-        //prompt user
-        cout << "Type 'h' to hit and 's' to stay: ";
-        cin >> user;
-        cout << endl;
+        //prompt user to start game
+        while(pScore < 21){
+            cout << "Type 'h' to hit and 's' to stay: " << endl;
+            cin >> user;
+            
+            //if player enters 'h'
+            //deal another card and display all cards in hand
+            if(user == 'h'){
+                phand[num_card_p] = cards[nextCard];
+                num_card_p++;
+                nextCard++;
+                
+                cout << "Player: ";
+                printHand(phand, num_card_p);
+                //cout << endl;
+                
+                //calculate score of player's hand cards
+                pScore = getBestScore(phand, num_card_p);
+            }
+            //if player enters anyting else, break out of loop
+            else
+                break;
+        };
         
-        while(user == 'h')
+        //if player busts, display "Player busts"
+        //else, dealer starts playing
+        if (pScore > 21){
+            cout << "Player busts" << endl;
+            cout << "Lose ";
+        }
+        else
+        {
+            while(dScore < 17){
+                dhand[num_card_d] = cards[nextCard];
+                nextCard++;
+                num_card_d++;
+                
+                dScore = getBestScore(dhand, num_card_d);
+            }
             
             
-            cout << "Play again? [y/n]" << endl;
+            //display dealer hand
+            cout << "Dealer: ";
+            printHand(dhand, num_card_d);
+            //cout << endl;
+            
+            //determine if dealer busts
+            if(dScore > 21){
+                cout << "Dealer busts" << endl;
+                cout << "Win ";
+            }
+            
+            //if dealer doesn't bust, determine winner
+            else{
+                if(pScore > dScore)
+                    cout << "Win ";
+                else
+                    if(pScore < dScore)
+                        cout << "Lose ";
+                    else
+                        cout << "Tie ";
+            }
+        }
+        
+        //display final scores
+        cout << pScore << " " << dScore << endl;
+        
+        cout << "\nPlay again? [y/n]" << endl;
         cin >> repeat;
     }
     
